@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>reveal.js - The HTML Presentation Framework</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+		<link rel="stylesheet" href="css/reveal_jp.css">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Vagrant&Chef<br>仮想サーバ構築</h1>
+					<h3>簡単？にやってみた</h3>
+				</section>
+        
+				<section>
+					<h2>目的</h2>
+					<h3><strong>Apache</strong>と<strong>postgreSQL</strong>が使える<br><strong>仮想サーバ</strong>つくる。</h3>
+				</section>
+        
+				<section>
+					<h2>Vagrantとは？</h2>
+          <p>仮想マシンの構築を手軽にしてくれるツール。</p>
+          <p>たった少しのコマンドで<br>仮想マシンの立ち上げ、操作が可能。</p>
+				</section>
+        
+				<section>
+					<h2>Chefとは？</h2>
+          <p> Ruby 製のシステム構成管理ツール。</p>
+          <p>インフラの構築を自動化できる。</p>
+				</section>
+        
+				<section>
+          <h3>とりあえず使ってみよう。</h3>
+				</section>
+        
+				<section>
+					<h2>作業のながれ</h2>
+					<ol>
+						<li>使用ツールのインストール</li>
+						<li>仮想マシンをたてる</li>
+						<li>Apacheを動かす</li>
+						<li>postgreSQLを動かす</li>
+						<li>Box化して再利用</li>
+						<li>おまけ：一緒に実行</li>
+					</ol>
+				</section>
+
+				<section>
+					<h2>１．使用ツールの<br>インストール</h2>
+				</section>
+
+				<section>
+					<h3>使用するツール</h3>
+          <p>（Windows前提）</p>
+					<ul>
+						<li>VirtualBox</li>
+						<li>Vagrant</li>
+						<li>MinGW</li>
+						<li>Ruby</li>
+						<li>Chef Client</li>
+						<li>knife-solo</li>
+					</ul>
+				</section>
+        
+				<section>
+					<h4>（意外と多い…）</h4>
+				</section>
+
+				<section>
+					<h3>VirtualBox</h3>
+          <p>Oracleの公式DLページからDL→インストール</p>
+          <p><a href="http://www.oracle.com/technetwork/server-storage/virtualbox/downloads/">http://www.oracle.com/technetwork/server-storage/virtualbox/downloads/</a></p>
+				</section>
+        
+				<!--<section>
+					<h3>Ruby</h3>
+          <p>「RubyInstaller」をDL→インストール</p>
+          <p>http://rubyinstaller.org/</p>
+				</section>-->
+        
+				<section>
+					<h3>Vagrant</h3>
+          <p>Vagrantの公式DLページからDL→インストール</p>
+          <p><a href="http://www.vagrantup.com/downloads.html">http://www.vagrantup.com/downloads.html</a></p>
+				</section>
+        
+				<section>
+					<h3>MinGW</h3>
+          <p>下記のページからインストーラーをDL</p>
+          <p><a href="http://sourceforge.net/projects/mingw/files/">http://sourceforge.net/projects/mingw/files/</a></p>
+          <p>「MinGW Installation Manager」がインストールされるので、下記のパッケージをインストール。</p>
+          
+					<ul>
+						<li>mingw32-base</li>
+						<li>mingw32-gcc-g++</li>
+						<li>msys-rsync</li>
+						<li>msys-openssh</li>
+					</ul>
+				</section>
+        
+				<section>
+					<h3>Chef Client</h3>
+          <p>下記公式サイトから、上から順にあてはまるものを選択してDL→インストール</p>
+          <p><a href="https://www.chef.io/download-chef-client/">https://www.chef.io/download-chef-client/</a></p>
+          <p>Rubyも自動で一緒にインストールされる。（らしい）</p>
+				</section>
+        
+				<section>
+					<h3>knife-solo</h3>
+          <p>コマンドプロンプトから、<br>Rubyの「gem install」でインストールする。</p>
+          <pre><code data-trim contenteditable>
+> C:\chef\embedded\bin\gem install knife-solo --no-ri --no-rdoc
+          </code></pre>
+				</section>
+        
+				<section>
+					<p>（ここまでで２日くらいかかりました…）</p>
+				</section>
+        
+				<section>
+					<h2>２．仮想マシンをたてる</h2>
+				</section>
+        
+				<section>
+					<h3>任意のフォルダを作成する</h3>
+					<p>※作業フォルダ兼共有フォルダになります。</p>
+          <pre><code data-trim contenteditable>
+> mkdir vagrant-test
+> cd vagrant-test
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>「vagrantcloud.com」から<br>Boxを選ぶ</h3>
+					<p><a href="https://vagrantcloud.com">https://vagrantcloud.com</a></p>
+					<p>今回は「<strong>chef/centos-6.5</strong>」を選んでみる。</p>
+				</section>
+        
+				<section>
+					<h3>Vagrantfileを生成する</h3>
+          <pre><code data-trim contenteditable>
+> vagrant init chef/centos-6.5
+          </code></pre>
+				</section>
+        
+				<section>
+          <p>Vagrantfileができるので、<br>エディタで下記文のコメントを外す</p>
+          <pre><code data-trim contenteditable>
+config.vm.network "private_network", ip: "192.168.33.10"
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>仮想マシンを立ち上げる</h3>
+          <pre><code data-trim contenteditable>
+> vagrant up
+          </code></pre>
+          <p>何分間か待つと、VirtualBoxが立ち上がっている。</p>
+				</section>
+        
+				<section>
+          <p>下記でSSHログインができる。</p>
+          <p>ユーザーは「vagrant」</p>
+          <pre><code data-trim contenteditable>
+> vagrant ssh
+
+Last login: Wed Jan 29 XX:XX:XX 2015 from 10.0.2.2
+[vagrant@localhost ~]$
+          </code></pre>
+				</section>
+        
+				<section>
+          <p>作業フォルダが以下に共有されている</p>
+          <pre><code data-trim contenteditable>
+[vagrant@localhost ~]$ cd /vagrant/
+[vagrant@localhost ~]$ ls
+
+Vagrantfile
+          </code></pre>
+				</section>
+        
+				<section>
+          <p>ついでに</p>
+					<h3>仮想マシンをシャットダウン</h3>
+          <pre><code data-trim contenteditable>
+> vagrant halt
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>とっても手軽！（な気がする）</h3>
+				</section>
+        
+				<section>
+					<h2>３．Apacheを動かす</h2>
+				</section>
+        
+				<section>
+					<h3>Knifeの設定</h3>
+          <pre><code data-trim contenteditable>
+> knife configure
+          </code></pre>
+          <p>次々出てくる質問にEnter押しておけばOK</p>
+				</section>
+        
+				<section>
+					<h3>リポジトリ（Kitchen）を作成する</h3>
+          <p>リポジトリ：chefを使う為に必要なディレクトリ群</p>
+          <pre><code data-trim contenteditable>
+> cd vagrant-test
+> knife solo init chef-test(←リポジトリ名)
+          </code></pre>
+          <p>作業フォルダ内にリポジトリが生成される</p>
+				</section>
+        
+				<section>
+					<p>リポジトリの構造</p>
+          <pre><code data-trim contenteditable>
+.
+├── cookbooks
+├── data_bags
+├── environments
+├── nodes
+├── roles
+└── site-cookbooks
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>Apache用「cookbook」を作成する</h3>
+          <p>cookbook：目的のための操作の手順書や必要ファイルをまとめるためのディレクトリ</p>
+          <pre><code data-trim contenteditable>
+> cd chef-test
+> knife cookbook create setup-apache(←cookbook名) -o site-cookbooks
+          </code></pre>
+          <p>chef-test/site-cookbooks内に生成される</p>
+				</section>
+        
+				<section>
+					<p>cookbookの構造</p>
+          <pre><code data-trim contenteditable>
+.
+├── attributes
+├── definitions
+├── files
+│   └── default
+├── libraries
+├── providers
+├── recipes
+├── resources
+└── templates
+    └── default
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>Apache用「Recipe」を書く</h3>
+          <p>Recipe：目的のための操作の手順書</p>
+          <pre><code data-trim contenteditable>
+chef-test
+└─ site-cookbooks
+    └─ setup-apache
+         └─ recipes
+             └─ default.rb
+          </code></pre>
+					<p>ここでは「default.rb」に書く</p>
+				</section>
+        
+				<section>
+          <p>Recipe記述例</p>
+          <pre><code data-trim contenteditable>
+#chef-test/site-cookbooks/setup-apache/recipes/default.rb
+          
+#Apacheインストール
+package "httpd" do
+  action :install
+end
+
+#プロセスの起動＆マシン立ち上げ時起動設定
+service "httpd" do
+  action [ :enable, :start ]
+end
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>ホスト名を設定する</h3>
+          <p>仮想マシンとのssh設定に対してホスト名をつける</p>
+          <pre><code data-trim contenteditable>
+> vagrant ssh-config --host vagrant-test(←ホスト名) >> ~/.ssh/config
+          </code></pre>
+				</section>
+        
+				<section>
+          <p>これで下記でもssh接続できるようになる</p>
+          <pre><code data-trim contenteditable>
+> ssh vagrant-test
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>chefを仮想マシンにインストール</h3>
+          <pre><code data-trim contenteditable>
+> knife solo prepare vagrant-test
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>nodesに追記</h3>
+          <p>リポジトリ内の/nodes/vagrant-test.json内に、<br>どのcookbookを実行するか記述する</p>
+          <pre><code data-trim contenteditable>
+#chef-test/nodes/vagrant-test.json
+
+{
+  "run_list":[
+    "recipe[setup-apache]"
+  ]
+}
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>「knife solo cook」を実行する</h3>
+          <pre><code data-trim contenteditable>
+> knife solo cook vagrant-test
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>Apacheが動いているか確認</h3>
+					<p><a href="http://192.168.33.10">http://192.168.33.10</a></p>
+				</section>
+        
+				<section>
+					<h2>４．postgreSQLを動かす</h2>
+				</section>
+        
+				<section>
+					<h3>postgreSQL用「cookbook」を<br>作成する</h3>
+          <pre><code data-trim contenteditable>
+> cd chef-test
+> knife cookbook create setup-postgresql -o site-cookbooks
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>postgreSQL用「Recipe」を書く</h3>
+          <p>Recipe記述例</p>
+          <pre><code data-trim contenteditable>
+#chef-test/site-cookbooks/setup-postgresql/recipes/default.rb
+          
+#yumインストール
+yum_package "postgresql-server" do
+action :install
+end
+
+#サービス初期化
+version_file = "/var/lib/pgsql/data/PG_VERSION"
+if not File.exists? version_file then
+execute "postgresql-init" do
+command "service postgresql initdb"
+end
+sleep 5
+end
+
+#プロセス再起動＆マシン立ち上げ時起動設定
+service "postgresql" do
+action [:enable, :restart]
+end
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>nodesに追記</h3>
+          <p>postgreSQL用「cookbook」も追記する</p>
+          <pre><code data-trim contenteditable>
+#chef-test/nodes/vagrant-test.json
+
+{
+  "run_list":[
+    "recipe[setup-apache]",
+    "recipe[setup-postgresql]"
+  ]
+}
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>「knife solo cook」を再度実行する</h3>
+          <pre><code data-trim contenteditable>
+> knife solo cook vagrant-test
+          </code></pre>
+          <p>※chefの動作は「ある操作を1回行っても複数回行っても結果が同じであること」(べき等性)が保障されているので、2回Apacheのインストールがされることはない</p>
+				</section>
+        
+				<section>
+					<h3>postgreSQLが動いているか確認</h3>
+          <p></p>
+          <pre><code data-trim contenteditable>
+> vagrant ssh
+
+Last login: Wed Jan 29 XX:XX:XX 2015 from 10.0.2.2
+[vagrant@localhost ~]$ service postgresql status
+
+postmaster (pid  10XX) is running...
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>これで必要なものが入った！</h3>
+				</section>
+        
+				<section>
+					<h2>５．Box化して再利用</h2>
+				</section>
+        
+				<section>
+					<h3>Box化する</h3>
+          <pre><code data-trim contenteditable>
+> cd vagrant-test
+> vagrant package
+          </code></pre>
+          <p>package.boxが生成される</p>
+				</section>
+        
+				<section>
+					<h3>生成されたBoxをVagrantに登録</h3>
+          <pre><code data-trim contenteditable>
+> vagrant box add test-centos6.5(←Box名) package.box
+          </code></pre>
+				</section>
+        
+				<section>
+          <p>なんやかんややって</p>
+					<h3>仮想マシンを破棄する</h3>
+          <pre><code data-trim contenteditable>
+> vagrant destroy
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>登録したBoxから<br>再度仮想マシンを立ち上げる</h3>
+          <pre><code data-trim contenteditable>
+> vagrant init test-centos6.5
+> vagrant up
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>必要なパッケージが入った仮想マシンがすぐできる！</h3>
+				</section>
+        
+				<section>
+					<h2>６．おまけ：一緒に実行</h2>
+				</section>
+        
+				<section>
+          <p>「vagrant up」でchefも一緒に実行させたい…！</p>
+				</section>
+        
+				<section>
+					<h3>vagrant-omnibus をインストール</h3>
+          <p>vagrant-omnibus：vagrantのプラグイン。</p>
+          <pre><code data-trim contenteditable>
+> vagrant plugin install vagrant-omnibus
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>vagrantfileに実行する設定を記述</h3>
+          <pre><code data-trim contenteditable>
+#vagrantfile
+          
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  ：
+　：
+  config.omnibus.chef_version = "11.6.0"
+
+  config.vm.provision "chef_solo" do |chef|
+    chef.cookbooks_path = "chef-test/site-cookbooks"
+    chef.add_recipe "setup-apache"
+    chef.add_recipe "setup-postgresql"
+end
+          </code></pre>
+				</section>
+        
+				<section>
+					<h3>vagrant up を実行</h3>
+          <pre><code data-trim contenteditable>
+> vagrant up
+          </code></pre>
+				</section>
+        
+        
+				<section>
+					<h2>まとめ</h2>
+          <ul><li>ツールを入れるのが一番苦労した</li>
+          <li>Vagrantは複雑なことを一括でしてくれるから便利</li>
+          <li>Chefも書き方に慣れたら便利そう</li></ul>
+          
+				</section>
+
+				<section>
+					<h1>おわり</h1>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
